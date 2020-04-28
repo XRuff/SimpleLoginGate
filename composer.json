@@ -1,0 +1,43 @@
+{
+	"name": "xruff/simplelogingate",
+	"type": "library",
+	"description": "",
+	"keywords": [
+		"nette"
+	],
+	"license": [
+		"MIT"
+	],
+	"authors": [
+		{
+			"name": "Pavel Lauko"
+		}
+	],
+	"require": {
+		"nette/utils": "^3.0",
+		"nette/security": "^3.0",
+		"nette/forms": "^3.0",
+		"nette/application": "^3.0",
+		"nette/di": "^3.0",
+		"xruff/basedbmodel": "^v3.0",
+		"xruff/apputils": "^v3.0",
+		"ramsey/uuid": "^3.9",
+		"tracy/tracy": "^2.7"
+	},
+	"require-dev": {
+		"vanio/coding-standards": "^0.1@dev",
+		"phpstan/phpstan-nette": "^0.12"
+	},
+	"autoload": {
+		"psr-4": {
+			"XRuff\\SimpleLoginGate\\": "src"
+		}
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"scripts": {
+		"phpstan": "phpstan analyse --level 6 --configuration tests/phpstan.neon src",
+		"lint": "\"vendor/bin/phpcs\" --standard=tests/ruleset.xml --extensions=php --encoding=utf-8 --ignore=vendor .",
+		"fix": "\"vendor/bin/phpcbf\" --standard=tests/ruleset.xml --extensions=php --encoding=utf-8 --no-patch --ignore=vendor ."
+	}
+}

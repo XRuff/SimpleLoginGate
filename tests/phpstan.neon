@@ -1,0 +1,10 @@
+includes:
+	- ../vendor/phpstan/phpstan-nette/extension.neon
+
+parameters:
+    autoload_directories:
+        - ../vendor
+    #excludes_analyse:
+    #   - ../vendor/**/tests/*
+    #ignoreErrors:
+    #    - '#Ambiguous class Notes resolution; defined in [a-zA-Z0-9\\_]+::doFoo\(\)#'
