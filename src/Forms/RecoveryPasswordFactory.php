@@ -104,6 +104,8 @@ class RecoveryPasswordFactory
 					$this->parent->flashMessage('Your password has been successfully changed.', 'success');
 				} catch (\Exception $e) {
 					Debugger::log($e, 'simplelogin');
+				} catch (\Error $e) {
+					Debugger::log($e, 'simplelogin');
 				}
 				$this->parent->redirect(':Homepage:default');
 			} else {

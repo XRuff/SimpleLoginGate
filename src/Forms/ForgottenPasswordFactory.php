@@ -93,6 +93,9 @@ class ForgottenPasswordFactory
 		} catch (\Exception $e) {
 			$form->addError('There was an error when changing your password.');
 			Debugger::log($e, 'simplelogin');
+		} catch (\Error $e) {
+			$form->addError('There was an error when changing your password.');
+			Debugger::log($e, 'simplelogin');
 		}
 
 		if ($success) {
