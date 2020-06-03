@@ -9,6 +9,7 @@ use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Database\IRow;
 use Nette\Localization\ITranslator;
+use Tracy\Debugger;
 use XRuff\App\Model\Utils\Email;
 use XRuff\SimpleLoginGate\Configuration;
 use XRuff\SimpleLoginGate\Model\ITokenManager;
@@ -97,9 +98,13 @@ class RecoveryPasswordFactory
 			$this->tokenManager->useToken($token, $user);
 
 			if ($result = $this->userManager->changePassword($token->user_id, $values)) {
-				// poslu mail o uspesne zmene hesla
-				$this->sendChangePasswordSuccessEmail($user);
-				$this->parent->flashMessage('Your password has been successfully changed.', 'success');
+				try {
+					// poslu mail o uspesne zmene hesla
+					$this->sendChangePasswordSuccessEmail($user);
+					$this->parent->flashMessage('Your password has been successfully changed.', 'success');
+				} catch (\Exception $e) {
+					Debugger::log($e, 'simplelogin');
+				}
 				$this->parent->redirect(':Homepage:default');
 			} else {
 				$this->parent->flashMessage('There was an error when changing your password.', 'error');
@@ -109,11 +114,14 @@ class RecoveryPasswordFactory
 
 	public function sendChangePasswordSuccessEmail(IRow $user): void
 	{
+		$messageHi = $this->translator->translate('Hi');
+		$message = $this->translator->translate('your password has been successfully changed.');
+
 		$this->email->send(
 			$this->config->nofityEmail,
 			$user->login,
 			$this->translator->translate('The password has been changed'),
-			'Hi ' . $user->name . ",\n\nyour password has been successfully changed."
+			$messageHi . ' ' . $user->name . ",\n\n" . $message
 		);
 	}
 

@@ -116,9 +116,8 @@ class RegistrationFormFactory
 			// if ($this->config->loginAfterRegistration) {
 			// 	$this->user->login($values->username, $values->password);
 			// }
-
 		} catch (\Exception $e) {
-			Debugger::log($e, 'login');
+			Debugger::log($e, 'simplelogin');
 			$form->addError($this->translator->translate('common.sign.signupfailed'));
 			return;
 		}
@@ -127,7 +126,7 @@ class RegistrationFormFactory
 			$this->onSuccess($values->password, $newUser, $this->config);
 			$this->sendActivationEmail($newUser);
 		} catch (SendException $e) {
-			Debugger::log($e, 'login');
+			Debugger::log($e, 'simplelogin');
 		}
 	}
 
@@ -135,11 +134,19 @@ class RegistrationFormFactory
 	{
 		$token = $this->tokenManager->addToken($user->id, 'activation');
 		$link = $this->parent->link('//Sign:activation', ['code' => $token]);
+
+		$messageHi = $this->translator->translate('Hi');
+		$message = $this->translator->translate('your registration need just one more step.');
+
+		$message2 = $this->translator->translate('Please, click on following link to confirm sign up process:');
+		$message3 = $this->translator->translate('If you did not request this action, you can ignore this email.');
+		$message4 = $this->translator->translate('Thanks');
+
 		$this->email->send(
 			$this->config->nofityEmail,
 			$user->login,
 			$this->translator->translate('common.sign.registrationemail.subject'),
-			'Hi ' . $user->name . ",\n\nyour registration need just one more step.\nPlease, click on following link to confirm sign up process:\n\n" . $link . "\n\nIf you did not request this action, you can ignore this email.\n\nThanks.\n"
+			$messageHi . ' ' . $user->name . ",\n\n" . $message . " \n" . $message2 . "\n\n" . $link . "\n\n" . $message3 . "\n\n" . $message4 . ".\n"
 		);
 	}
 }
