@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace XRuff\SimpleLoginGate;
 
 use Nette;
+use Nette\Database\IRow;
 use Nette\Security\Passwords;
 use XRuff\SimpleLoginGate\Identity\Facebook;
 use XRuff\SimpleLoginGate\Identity\Github;
@@ -56,7 +57,12 @@ class SocialNetworkRegistrator
 		$this->passwords = $passwords;
 	}
 
-	public function fromSocialNetwork($id, $identity)
+	/**
+	 * @param string $id
+	 * @param mixed $identity
+	 * @return SocialNetworkResult
+	 */
+	public function fromSocialNetwork(string $id, $identity)
 	{
 		$socialNetworkService = $this->getSocialNetworkService();
 
@@ -70,17 +76,18 @@ class SocialNetworkRegistrator
 
 		$socialNetworkService->addIdentity($user->id, $identity->id, $identity->email);
 
-		return (object) [
-			'identity' => $user,
-			'isNew' => $this->isNew,
-		];
+		return new SocialNetworkResult($user, $this->isNew);
 	}
 
-	public function updateUserIfNeeded($storedSocialProfile, $currentSocialProfile)
+	/**
+	 * @param mixed $storedSocialProfile
+	 * @param mixed $currentSocialProfile
+	 */
+	public function updateUserIfNeeded($storedSocialProfile, $currentSocialProfile): ?IRow
 	{
 		$socialNetworkService = $this->getSocialNetworkService();
 		$existing = $this->userManager->findBy(['id' => $storedSocialProfile->users_id])->fetch();
-		if ($this->config->socialNetworks->onLoginUpdate) {
+		if ($this->config->socialNetworks['onLoginUpdate']) {
 			$newUserData = $socialNetworkService->prepareIdentity($currentSocialProfile, null, true);
 			$this->userManager->update($existing->id, $newUserData);
 			$existing = $this->userManager->findBy(['id' => $storedSocialProfile->users_id])->fetch();
@@ -89,23 +96,30 @@ class SocialNetworkRegistrator
 		return $existing;
 	}
 
-	public function setSocialNetwork($socialNetwork)
+	public function setSocialNetwork(string $socialNetwork): self
 	{
 		$this->socialNetwork = $socialNetwork;
 		return $this;
 	}
 
-	public function getSocialNetwork()
+	public function getSocialNetwork(): string
 	{
 		return $this->socialNetwork;
 	}
 
+	/**
+	 * @return Facebook|Google|Github
+	 */
 	public function getSocialNetworkService()
 	{
 		return $this->{$this->getSocialNetwork()};
 	}
 
-	private function grabEmail(int $id, $identity)
+	/**
+	 * @param string $id
+	 * @param Facebook|Google|Github $identity
+	 */
+	private function grabEmail(string $id, $identity): string
 	{
 		if (isset($identity->email)) {
 			$email = $identity->email;
@@ -116,16 +130,24 @@ class SocialNetworkRegistrator
 		return $email;
 	}
 
-	private function addOrUpdateUser($presentUser, $newUserData)
+	/**
+	 * @param IRow|null $presentUser
+	 * @param array<string> $newUserData
+	 * @return mixed
+	 */
+	private function addOrUpdateUser(?IRow $presentUser, array $newUserData)
 	{
 		if ($presentUser) {
-			if ($this->config->socialNetworks->onLoginUpdate) {
+			if ($this->config->socialNetworks['onLoginUpdate']) {
 				unset($newUserData['role']);
 				$this->userManager->update($presentUser->id, $newUserData);
 			}
 		} else {
 			$presentUser = $this->userManager->register($newUserData);
-			$this->userManager->changePassword($presentUser->id, ['password' => $this->passwords->hash(time())]);
+			$this->userManager->changePassword(
+				$presentUser->id,
+				['password' => $this->passwords->hash((string) time())]
+			);
 			$this->isNew = true;
 		}
 
